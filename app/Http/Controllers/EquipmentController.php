@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\IndexEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Services\EquipmentService;
-
+use App\Http\Resources\EquipmentResource;
+use App\Models\Equipment;
+use App\Http\Resources\EquipmentCollection;
 class EquipmentController extends Controller
 {
 
@@ -18,7 +20,8 @@ class EquipmentController extends Controller
      */
     public function index(IndexEquipmentRequest $request)
     {
-        return $this->service->index($request->validated());
+        $response = $this->service->index($request->validated());
+        return $response instanceof Equipment ? new EquipmentCollection($response) : $response;
     }
 
     /**
@@ -26,7 +29,11 @@ class EquipmentController extends Controller
      */ 
     public function store()
     {   
-        return $this->service->store();
+        $response =  $this->service->store();
+        array_walk($response['success'], function(&$value){
+            $value = new EquipmentResource($value);
+        });
+        return $response;
     }
 
     /**
@@ -34,7 +41,8 @@ class EquipmentController extends Controller
      */
     public function show(int $id)
     {
-        return $this->service->show($id);
+        $response = $this->service->show($id);
+        return $response instanceof Equipment ? new EquipmentResource($response) : $response;
     }
 
     /**
@@ -42,7 +50,8 @@ class EquipmentController extends Controller
      */
     public function update(UpdateEquipmentRequest $request)
     {
-        return $this->service->update($request->validated());
+        $response = $this->service->update($request->validated());
+        return $response instanceof Equipment ? new EquipmentResource($response) : $response;
     }
 
     /**
@@ -50,6 +59,6 @@ class EquipmentController extends Controller
      */
     public function destroy(int $id)
     {   
-        $this->service->delete($id);
+        return $this->service->delete($id);
     }
 }

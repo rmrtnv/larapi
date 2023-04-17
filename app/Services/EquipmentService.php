@@ -3,25 +3,30 @@
 namespace App\Services;
 
 use App\Models\Equipment;
-use App\Http\Resources\EquipmentCollection;
+
 use App\Http\Resources\EquipmentResource;
 use Illuminate\Support\Facades\Validator;
 use App\Rules\SN;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Eloquent\Collection;
-
+use Exception;
 class EquipmentService
 {
 
     public function index(array $query)
     {
-        return new EquipmentCollection(Equipment::where($query)->paginate(1));
+        try {
+            $equipment = Equipment::where($query)->paginate(1);
+            return $equipment ?? 'Not found';
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
     }
 
-    public function show(int $id)
+    public function show(int $id): Equipment|string
     {
-        if($equipment = Equipment::find($id)) return new EquipmentResource($equipment);
-        return response()->json(['Record not found']);
+        $equipment = Equipment::find($id);
+        return $equipment ?? 'Not found';
     }
 
     public function store()
@@ -36,7 +41,7 @@ class EquipmentService
             $validator = Validator::make($object, [
                 'equipment_type_id' => 'required',
                 'serial_number' => ['required', new SN],
-                'comment' => 'max:500',
+                'comment' => 'max:255',
             ]);
             
             if($validator->messages()->any()){
@@ -44,14 +49,16 @@ class EquipmentService
                 continue;
             } else $response['validated'][$index] = $validator->validated();
 
-            $equipment = new Equipment;
-            if($id = $equipment::insertGetId($object)){
-                $response['success'][$index] = new EquipmentResource($equipment::find($id));
+            try {
+                $id = Equipment::insertGetId($object);
+                $response['success'][$index] = Equipment::findOrFail($id);
+
+            } catch (Exception $e) {
+                $msg[] = $e->getMessage();
+                $response['errors'][$index] = $msg;
             }
-            else $response['errors'][$index] = 'DB inserting failed.';
 
         }
-
         return $response;
     }
     
@@ -64,11 +71,14 @@ class EquipmentService
      */
     public function update(array $data)
     {
-        $equipment = Equipment::find($data['id']);
-        if(!$equipment) return response()->json(['Record not found']);
-        $equipment->update($data);
-        $equipment->save();
-        return new EquipmentResource($equipment);
+        try {
+            $equipment = Equipment::findOrFail($data['id']);
+            $equipment->update($data);
+            $equipment->save();
+            return $equipment;
+        } catch (Exception $e) {
+            return 'Updating error: ' . $e->getMessage();
+        }
     }
     
     /**
@@ -80,9 +90,13 @@ class EquipmentService
      */
     public function delete(int $id)
     {
-        $equipment = Equipment::find($id);
-        $equipment->delete();
+        try {
+            $equipment = Equipment::findOrFail($id);
+            if($equipment->delete()) return 'Deleted.';
+            return 'Not deleted.';
+        } catch (Exception $e) {
+            return 'Deletion error: ' . $e->getMessage();
+        }
     }
-
-
+    
 }

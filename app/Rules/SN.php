@@ -19,13 +19,6 @@ class SN implements ValidationRule, ValidatorAwareRule
     protected $validator;
 
     /**
-     * Indicates whether the rule should be implicit.
-     *
-     * @var bool
-     */
-    public $implicit = true;
-
-    /**
      * Run the validation rule.
      *
      * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail

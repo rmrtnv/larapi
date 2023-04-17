@@ -25,7 +25,7 @@ class UpdateEquipmentRequest extends FormRequest
             'id' => 'required',
             'equipment_type_id' => 'required',
             'serial_number' => 'max:10',
-            'comment' => 'max:100'
+            'comment' => 'max:255'
         ];
     }
 }
