@@ -2,4 +2,5 @@
 
 ### desciption:
 
-[task.pdf](task.pdf)
+
+[task.pdf](task.pdf) (ссылка на тестовое задание)
